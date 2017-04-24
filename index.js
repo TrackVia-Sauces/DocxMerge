@@ -8,69 +8,12 @@ var fs = require('fs');
 var path = require('path');
 var TrackviaAPI = require('trackvia-api');
 var FormatHelper = require('./formatHelper.js');
-
-/**
- * Constants and global variables needed
- * to make this all work
- */
-
-//The API key that gives you access to the API
-//This is found at https://go.trackvia.com/#/my-info
-const API_KEY = '12345777';
-
-//The name of the user to login as
-const USERNAME = 'user@user.com';
-
-//The password of the user to login as
-const PASSWORD = 'correcthorsebatterystaple';
-
-//The address of the server you'll be using
-const PRODUCTION_SERVER = 'https://go.trackvia.com';
+var config = require('./config');
 
 //The ID of a record
 const ID_FIELD = "id";
-
-/************************* Template Table *********************************/
-//The view ID we'll use to find the template files
-const TEMPLATE_VIEW_ID = 67;
-
-//The name of the field in the template view that holds the docx file
-const TEMPLATE_FIELD_NAME = "Template";
-
-/************************* Merged Doc Table *********************************/
-//The view ID we'll use to place the merged doc files
-const MERGED_DOC_VIEW_ID = 68;
-
-//The name of the field in the merged doc view that holds the docx file
-const MERGED_DOC_FIELD_NAME = "Doc";
-
-//The name of the field where we'll put the details of the doc merge
-const MERGED_DOC_DESCRITION_FIELD_NAME = "Details";
-
-//The name of the field in the merged doc table that links to the template
-const MERGED_DOC_TEMPLATE_FIELD_NAME = "Template";
-const MERGED_DOC_TEMPLATE_FIELD_NAME_ID = MERGED_DOC_TEMPLATE_FIELD_NAME + "(id)";
-
-
-/************************* Source Record Tables *********************************/
-//The name of the field on ANY RECORD THAT NEEDS TO BE MERGED
-//that tells us which template to use
-//this needs to be the same across all tables that will
-//have their records merged
-const SOURCE_RECORD_TEMPLATE_FIELD_NAME = "Merge Template";
-const SOURCE_RECORD_TEMPLATE_FIELD_NAME_ID = SOURCE_RECORD_TEMPLATE_FIELD_NAME + "(id)";
-
-//This one is a big complex but necesary
-//For reaons I won't go into here we need to know
-//what view to look into for records that need to be merged
-//when an event fires on a given table. So we need a map
-//that connects table IDs to view IDs
-const TABLE_TO_VIEW_MAP = {
-                                "52" : 70
-                            };
-
 //The TrackVia api for interaction with the data
-var api = new TrackviaAPI(API_KEY, PRODUCTION_SERVER);
+var api = new TrackviaAPI(config.account.api_key, config.account.environment);
 var formatter = new FormatHelper();
 
 
@@ -117,9 +60,8 @@ function getRecordsThatNeedToBeMerged(tableId){
     //with this table Id
     var viewId = getViewForTable(tableId);
     console.log("ViewId is: " + viewId);
-
     //now login
-    api.login(USERNAME, PASSWORD)
+    api.login(config.account.username, config.account.password)
     .then(() => {
         console.log('Logged In.');
         return api.getView(viewId, {"start": 0, "max": 1000})
@@ -144,7 +86,8 @@ function getRecordsThatNeedToBeMerged(tableId){
  */
 function resetSourceRecordLTP(viewId, records){
     var resetPromises = [];
-    var data = {[SOURCE_RECORD_TEMPLATE_FIELD_NAME]:null};
+    var templateRelationshipFieldName = config.source_tables.template_relationship_field_name;
+    var data = {[templateRelationshipFieldName]:null};
     records.forEach(function(record){
         resetPromises.push(api.updateRecord(viewId, record[ID_FIELD], data));
     });
@@ -169,7 +112,7 @@ function getTemplates(viewId, data, structure){
     var templateIdsInOrder = [];
     for(id in templatesToRecords){
         templateIdsInOrder.push(id);
-        promises.push(api.getFile(TEMPLATE_VIEW_ID, id, TEMPLATE_FIELD_NAME));
+        promises.push(api.getFile(config.template_table.view_id, id, config.template_table.field_name_for_template_document));
     }
     Promise.all(promises)
     .then((templates) => {
@@ -206,10 +149,10 @@ function uploadMergeFiles(viewId, idsToMergeFiles, templatesToRecords){
         var file = idsToMergeFiles[id];
         var recordCount = templatesToRecords[id].length;
         var recordData = {
-                            [MERGED_DOC_DESCRITION_FIELD_NAME]: "Merged " + recordCount + " records from view: " + viewId,
-                             [MERGED_DOC_TEMPLATE_FIELD_NAME]: id
+                            [config.merged_doc_table.merged_doc_details_field_name]: "Merged " + recordCount + " records from view: " + viewId,
+                             [config.merged_doc_table.merged_doc_to_template_relationship_field_name]: id
                         };
-        promises.push(api.addRecord(MERGED_DOC_VIEW_ID, recordData));
+        promises.push(api.addRecord(config.merged_doc_table.view_id, recordData));
     }
     Promise.all(promises)
     .then((newRecords) =>{
@@ -218,7 +161,7 @@ function uploadMergeFiles(viewId, idsToMergeFiles, templatesToRecords){
         for(id in idsToMergeFiles){
             var file = idsToMergeFiles[id];
             var recordId = newRecords[i].data[0][ID_FIELD];
-            uploadPromises.push(api.attachFile(MERGED_DOC_VIEW_ID, recordId, MERGED_DOC_FIELD_NAME, file));
+            uploadPromises.push(api.attachFile(config.merged_doc_table.view_id, recordId, config.merged_doc_table.merged_document_field_name, file));
             i++;
         }
         return Promise.all(uploadPromises);
@@ -264,13 +207,10 @@ function mergeRecordIntoTemplate(records, template, templateId){
     var zip = new JSZip(content);
     var doc = new Docxtemplater();
     doc.loadZip(zip);
+    //This bit of code here will make sure that variables in the template
+    //that don't have corresponding values in the record data are
+    //replaced with empty strings
     doc.setOptions({'nullGetter': function(part) {
-            if (!part.module) {
-                    return "";
-            }
-            if (part.module === "rawxml") {
-                    return "";
-            }
             return "";
     }})
 
@@ -313,7 +253,7 @@ function mergeRecordIntoTemplate(records, template, templateId){
 function getDistinctTemplateForRecords(records, template){
     var templatesToRecords = {};
     records.forEach(function(record){
-        var templateId = record[SOURCE_RECORD_TEMPLATE_FIELD_NAME_ID];
+        var templateId = record[config.source_tables.template_relationship_field_name_id];
         if(templateId){
             if(!(templateId in templatesToRecords)){
                 templatesToRecords[templateId] = [];
@@ -333,18 +273,18 @@ function getDistinctTemplateForRecords(records, template){
  */
 function getViewForTable(tableId){
     //make sure we're using a string key
-    tableId = tableId + "";
+    tableId = tableId.toString();
 
     //check if the table is in our
     //map of tables to views
-    if(!(tableId in TABLE_TO_VIEW_MAP)){
+    if(!(tableId in config.source_tables.table_ids_to_view_ids)){
         var errorStr = "There's no entry in our map for table: " + tableId + ". End";
         handleError(errorStr);
         return;
     }
 
     //get the view ID
-    return TABLE_TO_VIEW_MAP[tableId];
+    return config.source_tables.table_ids_to_view_ids[tableId];
 }
 
 
