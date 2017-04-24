@@ -11,7 +11,7 @@ This sauce assumes you have the following setup
 Download or clone this repository and run `npm install` to install all the node modules needed to run this sauce
 
 ## Configuration
-First copy the [config.template.js file](https://github.com/TrackVia-Sauces/DocxMerge/blob/master/config.template.js) as config.js and then change the following to match the details of your account:
+First copy the [config.template.js file](https://github.com/TrackVia-Sauces/DocxMerge/blob/master/config.template.js) as `config.js` and then change the following in `config.js` to match the details of your account:
 ```
 /************************* Account Config *********************************/
 //The API key that gives you access to the API
