@@ -2,10 +2,10 @@
 Merges records from the same table into one .docx file using a .docx template.
 
 This sauce assumes you have the following setup
-* A table with a document field that holds the templates for your doc merges. We'll call this the template table. This is where the sauce will find the templates. If you want to change a template you just need to re-upload a new template file. If you want to use multiple templates, simply create multiple records in this table
+* A table with a document field that holds the templates for your doc merges. We'll call this the template table. This is where the sauce will find the templates. If you want to change a template you just need to re-upload a new template file. If you want to use multiple templates, simply create multiple records in this table.
 * A table with a document field that holds the merged .docx file. We'll call this the merged doc table. After a successful merge a new record will be created in this table and the merged file will be uploaded to it in a document field. This table should also contain a relationship to the template table, so you know where the merged doc came from, and a short answer field for some simple notes about the merge.
-* Any table that you want to merge records from should have a relationship to the template table so you can select which template you want to use.
-* For each table that has records that need to be merged setup a filetered view that only shows records who have a parent template set. This will be the view the sacue will look in to find the records it needs to merge.
+* Any table that you want to merge records from should have a relationship to the template table, so you can select which template you want to use.
+* For each table that has records that need to be merged, create a filetered view that only shows records who have a parent template set. This will be the view the sacue will look in to find the records it needs to merge.
 
 ## Configuration
 The following section of the [index.js](https://github.com/TrackVia-Sauces/DocxMerge/blob/master/index.js) file needs to changed to reflect your account:
@@ -23,9 +23,6 @@ const PASSWORD = 'correcthorsebatterystaple';
 
 //The address of the server you'll be using
 const PRODUCTION_SERVER = 'https://go.trackvia.com';
-
-//The ID of a record
-const ID_FIELD = "id";
 
 /************************* Template Table *********************************/
 //The view ID we'll use to find the template files
@@ -46,7 +43,6 @@ const MERGED_DOC_DESCRITION_FIELD_NAME = "Details";
 
 //The name of the field in the merged doc table that links to the template
 const MERGED_DOC_TEMPLATE_FIELD_NAME = "Template";
-const MERGED_DOC_TEMPLATE_FIELD_NAME_ID = MERGED_DOC_TEMPLATE_FIELD_NAME + "(id)";
 
 
 /************************* Source Record Tables *********************************/
@@ -55,7 +51,6 @@ const MERGED_DOC_TEMPLATE_FIELD_NAME_ID = MERGED_DOC_TEMPLATE_FIELD_NAME + "(id)
 //this needs to be the same across all tables that will
 //have their records merged
 const SOURCE_RECORD_TEMPLATE_FIELD_NAME = "Merge Template";
-const SOURCE_RECORD_TEMPLATE_FIELD_NAME_ID = SOURCE_RECORD_TEMPLATE_FIELD_NAME + "(id)";
 
 //This one is a big complex but necesary
 //For reaons I won't go into here we need to know
