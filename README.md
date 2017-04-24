@@ -70,7 +70,7 @@ config.source_tables.table_ids_to_view_ids = {
                             };
 ```
 ## .docx Templates
-The [template file include](https://github.com/TrackVia-Sauces/DocxMerge/blob/master/template_example.docx) shows how to use curly braces `{}` to add variables to your .docx file that will be replaced by values from your TrackVia records.
+The [template file included](https://github.com/TrackVia-Sauces/DocxMerge/blob/master/template_example.docx) shows how to use curly braces `{}` to add variables to your .docx file that will be replaced by values from your TrackVia records.
 
 * Keep in mind that the document must have a page start tag `{#page}` and a page close tag `{/page}` on another page for paging to work.
 * If the names in your records have spaces replace them with underscores. For example a field called "first name" would be written as `{first_name}` in the template.
