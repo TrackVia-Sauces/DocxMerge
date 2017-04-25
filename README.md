@@ -5,7 +5,7 @@ This sauce assumes you have the following setup
 * A table with a document field that holds the templates for your doc merges. We'll call this the template table. This is where the sauce will find the templates. If you want to change a template you just need to re-upload a new template file. If you want to use multiple templates, simply create multiple records in this table.
 * A table with a document field that holds the merged .docx file. We'll call this the merged doc table. After a successful merge a new record will be created in this table and the merged file will be uploaded to it in a document field. This table should also contain a relationship to the template table, so you know where the merged doc came from, and a short answer field for some simple notes about the merge.
 * Any table that you want to merge records from should have a relationship to the template table, so you can select which template you want to use.
-* For each table that has records that need to be merged, create a filetered view that only shows records who have a parent template set. This will be the view the sacue will look in to find the records it needs to merge.
+* For each table that has records that need to be merged, create a filetered view that only shows records who have a parent template set. This will be the view the sauce will look in to find the records it needs to merge.
 
 ## Installation
 Download or clone this repository and run `npm install` to install all the node modules needed to run this sauce
