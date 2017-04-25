@@ -299,9 +299,3 @@ function handleError(err){
         globalCallback(null, err);
     }
 }
-
-
-
-
-//for testing only remove this before launching
-exports.handler({"tableId":52}, null, function(arg){console.log(arg);});
