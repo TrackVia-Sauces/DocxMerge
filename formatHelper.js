@@ -47,7 +47,7 @@ class FormatHelper {
         recordList.forEach(function(record){
             var sanitizedRecord = {};
             for(var field in record){
-                var sanitizeField = field.toLowerCase();
+                var sanitizeField = field;
                 sanitizeField = sanitizeField.replace(/\s+/g, '_');
                 var value = record[field];
                 var fieldType = self.getStructureForField(field, structure);
