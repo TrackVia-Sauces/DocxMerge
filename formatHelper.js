@@ -48,7 +48,10 @@ class FormatHelper {
             var sanitizedRecord = {};
             for(var field in record){
                 var sanitizeField = field;
+                //strip out spaces and replace with underscores
                 sanitizeField = sanitizeField.replace(/\s+/g, '_');
+                //strip out special characters
+                sanitizeField = sanitizeField.replace(/#|\"|\'|!|@|\$|%|\^|\(|\)|\*|=|\+|&*/g,'')
                 var value = record[field];
                 var fieldType = self.getStructureForField(field, structure);
                 value = self.formatValue(value, fieldType);
