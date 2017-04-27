@@ -74,3 +74,4 @@ The [template file included](https://github.com/TrackVia-Sauces/DocxMerge/blob/m
 
 * Keep in mind that the document must have a page start tag `{#page}` and a page close tag `{/page}` on another page for paging to work.
 * If the names in your records have spaces replace them with underscores. For example a field called "first name" would be written as `{first_name}` in the template.
+* Field names are cas sensative. If your field in TrackVia is "First name" then you must call it '{First_name}' in the template file.
