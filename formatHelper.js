@@ -67,6 +67,9 @@ class FormatHelper {
      * @param {String} fieldType 
      */
     formatValue(value, fieldType){
+        if(!value){
+            return "";
+        }
         switch(fieldType){
             case "datetime":
                 var date = new Date(value);
