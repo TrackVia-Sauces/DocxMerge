@@ -42,13 +42,18 @@ config.merged_doc_table.view_id = 2;
 config.merged_doc_table.merged_document_field_name = "Doc";
 
 //The name of the field where we'll put the details of the doc merge
+// (Optional)
 config.merged_doc_table.merged_doc_details_field_name = "Details";
 
 //The name of the field in the merged doc table that links to the template
+// (Optional)
 config.merged_doc_table.merged_doc_to_template_relationship_field_name = "Template";
-//This config does not need to be edited. It'll modify the field name above to point 
-//to the numeric ID of the relationship
-config.merged_doc_table.merged_doc_to_template_relationship_field_name_id = config.merged_doc_table.merged_doc_to_template_relationship_field_name + "(id)";
+
+//A user field in the merged doc table that is the last user to change the source records.
+//This way you know who made the change
+// (Optional)
+config.merged_doc_table.merge_user_field_name = "Merge By User";
+
 
 /************************* Source Record Tables *********************************/
 //The name of the field on ANY RECORD THAT NEEDS TO BE MERGED
@@ -68,10 +73,12 @@ config.source_tables.template_relationship_field_name_id = config.source_tables.
 config.source_tables.table_ids_to_view_ids = {
                                 "3" : 4
                             };
+
 ```
 ## .docx Templates
 The [template file included](https://github.com/TrackVia-Sauces/DocxMerge/blob/master/template_example.docx) shows how to use curly braces `{}` to add variables to your .docx file that will be replaced by values from your TrackVia records.
 
 * Keep in mind that the document must have a page start tag `{#page}` and a page close tag `{/page}` on another page for paging to work.
 * If the names in your records have spaces replace them with underscores. For example a field called "first name" would be written as `{first_name}` in the template.
-* Field names are cas sensative. If your field in TrackVia is "First name" then you must call it '{First_name}' in the template file.
+* Field names are case sensative. If your field in TrackVia is "First name" then you must call it '{First_name}' in the template file.
+* Field names cannot have special characters like symbols. For exmaple you can't use `{#_of_days}`.

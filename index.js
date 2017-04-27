@@ -12,6 +12,11 @@ var config = require('./config');
 
 //The ID of a record
 const ID_FIELD = "id";
+
+const RECORD_ID_FIELD = "Record ID";
+
+const LAST_USER_ID_FIELD = "Last User(id)";
+
 //The TrackVia api for interaction with the data
 var api = new TrackviaAPI(config.account.api_key, config.account.environment);
 var formatter = new FormatHelper();
@@ -131,8 +136,8 @@ function getTemplates(viewId, data, structure){
             templateIdToFiles[templateIdsInOrder[i]] = {"file": file, "name": fileName};
         }
         //might need to write files to disk here? Not sure.
-        var idsToMergeFiles = mergeRecordsIntoTemplates(templatesToRecords, templateIdToFiles, structure)
-        uploadMergeFiles(viewId, idsToMergeFiles, templatesToRecords);
+        var mergeData = mergeRecordsIntoTemplates(templatesToRecords, templateIdToFiles, structure)
+        uploadMergeFiles(viewId, mergeData, templatesToRecords);
     }).catch(function(err) {
        handleError(err);
     });
@@ -143,23 +148,41 @@ function getTemplates(viewId, data, structure){
  * and upload them in the appropriate place
  * @param {object} idsToMergeFiles 
  */
-function uploadMergeFiles(viewId, idsToMergeFiles, templatesToRecords){
+function uploadMergeFiles(viewId, mergeData, templatesToRecords){
     var promises = [];
-    for(id in idsToMergeFiles){
-        var file = idsToMergeFiles[id];
+    for(id in mergeData){
+        var templateMergeData = mergeData[id];
+        var file = templateMergeData["file"];
+        var recordIdList = templateMergeData["recordIds"];
+        var userId = templateMergeData["userId"];
+        
+        var recordIdsStr = recordIdList.join("\n");
         var recordCount = templatesToRecords[id].length;
-        var recordData = {
-                            [config.merged_doc_table.merged_doc_details_field_name]: "Merged " + recordCount + " records from view: " + viewId,
-                             [config.merged_doc_table.merged_doc_to_template_relationship_field_name]: id
-                        };
+        var recordData = {};
+        
+        //if defined update the details
+        if(config.merged_doc_table.merged_doc_details_field_name){
+            recordData[config.merged_doc_table.merged_doc_details_field_name] = "Merged " + recordCount + " records:\n" + recordIdsStr;
+        }
+
+        //if defined set the relationship
+        if(config.merged_doc_table.merged_doc_to_template_relationship_field_name){
+            recordData[config.merged_doc_table.merged_doc_to_template_relationship_field_name] = id;
+        }
+
+        //if it's all configured, add the user who made the change
+        if(config.merged_doc_table.merge_user_field_name && userId){
+            recordData[config.merged_doc_table.merge_user_field_name] = userId;
+        }
         promises.push(api.addRecord(config.merged_doc_table.view_id, recordData));
     }
     Promise.all(promises)
     .then((newRecords) =>{
         var uploadPromises = [];
         var i = 0;
-        for(id in idsToMergeFiles){
-            var file = idsToMergeFiles[id];
+        for(id in mergeData){
+            var templateMergeData = mergeData[id];
+            var file = templateMergeData["file"];
             var recordId = newRecords[i].data[0][ID_FIELD];
             uploadPromises.push(api.attachFile(config.merged_doc_table.view_id, recordId, config.merged_doc_table.merged_document_field_name, file));
             i++;
@@ -183,13 +206,44 @@ function mergeRecordsIntoTemplates(templatesToRecords, templateIdToFiles, struct
     var idsToMergeFiles = {};    
     for(var templateId in templateIdToFiles){
         var recordsWithSanitizedFieldNames = formatter.sanitizeData(templatesToRecords[templateId], structure);
+        
+        //get the user who last updated the source record
+        var userId = getLastUpdatedUser(templatesToRecords[templateId]);
+        //gets a list of record IDs for the notes
+        var recordIds = getRecordIdsList(templatesToRecords[templateId]);
         var mergeFile = mergeRecordIntoTemplate(recordsWithSanitizedFieldNames, templateIdToFiles[templateId], templateId);
-        idsToMergeFiles[templateId] = mergeFile;
+        idsToMergeFiles[templateId] = {"file": mergeFile, "recordIds": recordIds, "userId": userId};
     }
 
     return idsToMergeFiles;
 }
 
+/**
+ * Gets the last user to update the record
+ * @param {Map} recordList 
+ */
+function getLastUpdatedUser(recordList){
+    var userId = null;
+    if(recordList.length > 0){
+        userId = recordList[0][LAST_USER_ID_FIELD];
+    }
+    return userId;
+}
+
+/**
+ * Creates a list of recordId values
+ * @param {Map} recordList 
+ */
+function getRecordIdsList(recordList){
+    var list = [];
+    recordList.forEach(function(record){
+        var recordId = record[RECORD_ID_FIELD];
+        if(recordId){
+            list.push(recordId);
+        }
+    });
+    return list;
+}
 
 
 
@@ -299,3 +353,6 @@ function handleError(err){
         globalCallback(null, err);
     }
 }
+
+/*** REMOVE ***/
+exports.handler({"tableId":52}, null, null);

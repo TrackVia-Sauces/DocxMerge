@@ -40,13 +40,18 @@ config.merged_doc_table.view_id = 2;
 config.merged_doc_table.merged_document_field_name = "Doc";
 
 //The name of the field where we'll put the details of the doc merge
+// (Optional)
 config.merged_doc_table.merged_doc_details_field_name = "Details";
 
 //The name of the field in the merged doc table that links to the template
+// (Optional)
 config.merged_doc_table.merged_doc_to_template_relationship_field_name = "Template";
-//This config does not need to be edited. It'll modify the field name above to point 
-//to the numeric ID of the relationship
-config.merged_doc_table.merged_doc_to_template_relationship_field_name_id = config.merged_doc_table.merged_doc_to_template_relationship_field_name + "(id)";
+
+//A user field in the merged doc table that is the last user to change the source records.
+//This way you know who made the change
+// (Optional)
+config.merged_doc_table.merge_user_field_name = "Merge By User";
+
 
 /************************* Source Record Tables *********************************/
 //The name of the field on ANY RECORD THAT NEEDS TO BE MERGED
