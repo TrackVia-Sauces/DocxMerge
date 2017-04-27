@@ -1,7 +1,7 @@
 {
-  "name": "pdf_gen",
+  "name": "DocXMerge",
   "version": "1.0.0",
-  "description": "Create PDFs from TrackVia data using the liquid template engine",
+  "description": "merge documents into PDFs",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,10 +9,11 @@
   "author": "John Etherton",
   "license": "ISC",
   "dependencies": {
-    "liquid-node": "2.6.1",
     "promise": "^7.1.1",
     "trackvia-api": "^1.0.0",
-    "html-pdf": "2.1.0",
-    "dateformat": "2.0.0"
+    "dateformat": "2.0.0",
+    "docxtemplater": "3.0.11",
+    "xmldom": "0.1.27",
+    "jszip": "3.1.3"
   }
 }
