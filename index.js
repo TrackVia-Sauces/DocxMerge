@@ -1,4 +1,10 @@
 /**
+ * 
+ * This sauce relies heavily on the docxtemplater by Edgar Hipp
+ * https://github.com/open-xml-templating/docxtemplater
+ * The orginal source was changed to allow new-line characters to work
+ * as expected by our users.
+ * 
  * Grab the libraries we need to 
  * merge docx files
  */
