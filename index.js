@@ -3,7 +3,7 @@
  * merge docx files
  */
 var JSZip = require('jszip');
-var Docxtemplater = require('docxtemplater');
+var Docxtemplater = require('./docxtemplater/js/docxtemplater.js');
 var fs = require('fs');
 var path = require('path');
 var TrackviaAPI = require('trackvia-api');
@@ -353,6 +353,3 @@ function handleError(err){
         globalCallback(null, err);
     }
 }
-
-/*** REMOVE ***/
-exports.handler({"tableId":52}, null, null);
