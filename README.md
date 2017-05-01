@@ -81,4 +81,4 @@ The [template file included](https://github.com/TrackVia-Sauces/DocxMerge/blob/m
 * Keep in mind that the document must have a page start tag `{#page}` and a page close tag `{/page}` on another page for paging to work.
 * If the names in your records have spaces replace them with underscores. For example a field called "first name" would be written as `{first_name}` in the template.
 * Field names are case sensative. If your field in TrackVia is "First name" then you must call it '{First_name}' in the template file.
-* Field names cannot have special characters like symbols. For exmaple you can't use `{#_of_days}`.
+* Field names cannot have special characters like symbols. For exmaple you can't use `{#_of_days}`. The sauce will remove `#, ", ', !, @, $, %, ^, (, ), *, =, +, &` from field names that come back in the data, so if you have a field called "cash$" you can refer to it as `{cash}` and it will work. All that being said, do try to avoid special characters they always make things hard.
