@@ -75,6 +75,9 @@ config.source_tables.table_ids_to_view_ids = {
                             };
 
 ```
+
+Once you've configured your config.js file, zip up everything, and use that zip file as your source file for configuring the TrackVia microservice.
+
 ## .docx Templates
 The [template file included](https://github.com/TrackVia-Sauces/DocxMerge/blob/master/template_example.docx) shows how to use curly braces `{}` to add variables to your .docx file that will be replaced by values from your TrackVia records.
 
