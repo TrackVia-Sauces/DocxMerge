@@ -7,6 +7,11 @@ This sauce assumes you have the following setup
 * Any table that you want to merge records from should have a relationship to the template table, so you can select which template you want to use.
 * For each table that has records that need to be merged, create a filetered view that only shows records who have a parent template set. This will be the view the sauce will look in to find the records it needs to merge.
 
+Here is an exmaple ERD for an app that has been setup to perform doc merge on a table called *Reciepts* and a table called *Invoices*. The .docx templates are stored in the table called *Templates* and the resultant merged documents are stored in *Merge Docs*. 
+
+![alt text](https://raw.githubusercontent.com/TrackVia-Sauces/DocxMerge/master/docs/erd_example.png "Example ERD")
+
+
 ## Installation
 Download or clone this repository and run `npm install` to install all the node modules needed to run this sauce
 
