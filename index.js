@@ -8,6 +8,7 @@
  * Grab the libraries we need to 
  * merge docx files
  */
+const util = require('util');
 var JSZip = require('jszip');
 var Docxtemplater = require('./docxtemplater/js/docxtemplater.js');
 var fs = require('fs');
@@ -278,6 +279,8 @@ function mergeRecordIntoTemplate(records, template, templateId){
     }})
 
 
+    console.log("Data to merge:");
+    console.log(records);
     //create the data structure to merge into the template
     var mergeData = {"page":records};
 
@@ -357,8 +360,10 @@ function getViewForTable(tableId){
  */
 function handleError(err){
     console.log("We had an error:");
-    console.log(err);
+    console.log(util.inspect(err, {showHidden: false, depth: null}))
     if(globalCallback != null){
         globalCallback(null, err);
     }
 }
+
+exports.handler({"tableId": 52}, null, null);
