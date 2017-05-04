@@ -366,4 +366,3 @@ function handleError(err){
     }
 }
 
-exports.handler({"tableId": 52}, null, null);
