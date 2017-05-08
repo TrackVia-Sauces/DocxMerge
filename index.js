@@ -145,9 +145,6 @@ function getTemplates(viewId, data, structure){
         //might need to write files to disk here? Not sure.
         var mergeData = mergeRecordsIntoTemplates(templatesToRecords, templateIdToFiles, structure)
         uploadMergeFiles(viewId, mergeData, templatesToRecords);
-        if(globalCallback){
-            globalCallback(null, "Merge completed successfully");
-        }
     }).catch(function(err) {
        handleError(err);
     });
@@ -201,6 +198,9 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
     })
     .then((uploadResponses) =>{
         console.log("done uploading everything");
+        if(globalCallback){
+            globalCallback(null, "Merge completed successfully");
+        }
     })
     .catch(function(err) {
         handleError(err);
