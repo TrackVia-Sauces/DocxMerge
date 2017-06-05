@@ -151,7 +151,8 @@ function getTemplates(viewId, data, structure){
         var mergeData = mergeRecordsIntoTemplates(templatesToRecords, templateIdToFiles, structure)
         uploadMergeFiles(viewId, mergeData, templatesToRecords);
     }).catch(function(err) {
-       handleError(err);
+      checkFieldNames("template", viewId)
+      handleError(err);
     });
 }
 
@@ -217,18 +218,22 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
         }
     })
     .catch(function(err) {
-      //if you get here, try doing a simple GET on the view to see if the viewID is the issue,
-      //if the GET succeeds make sure the field name is correct.
-      promises = [];
-      promises.push(api.getView(viewId));
-      Promise.all(promises)
-      .then((view) => {
-        if (promises.length > 0) {
-          return log.error("---   Unable to find field name from merged table, please ensure EXACT match   ---")
-        }
-      })
+      checkFieldNames("merged",viewId);
       handleError(err);
     });
+}
+
+function checkFieldNames(table, viewId) {
+  //if you get here, try doing a simple GET on the view to see if the viewID is the issue,
+  //if the GET succeeds make sure the field name is correct.
+  promises = [];
+  promises.push(api.getView(viewId));
+  Promise.all(promises)
+  .then((view) => {
+    if (promises.length > 0) {
+      return log.error(`---   Unable to find field name from ${table} table, please ensure EXACT match   ---`);
+    }
+  })
 }
 
 /**
