@@ -72,16 +72,16 @@ function getRecordsThatNeedToBeMerged(tableId){
     //first figure out if we have a viewId associated
     //with this table Id
     var viewId = getViewForTable(tableId);
-    console.log("ViewId is: " + viewId);
+    log.log("ViewId is: " + viewId);
     //now login
     api.login(config.account.username, config.account.password)
     .then(() => {
-        console.log('Logged In.');
+        log.log('Logged In.');
         return api.getView(viewId, {"start": 0, "max": 1000})
     }).then((response) =>{
         var data = response.data;
         var structure = response.structure;
-        console.log("Records found in view: " + data.length);
+        log.log("Records found in view: " + data.length);
         resetSourceRecordLTP(viewId, data)
 
         //now figure out what templates are at play for which records
@@ -107,7 +107,7 @@ function resetSourceRecordLTP(viewId, records){
     //don't care about the response
     Promise.all(resetPromises)
     .then(()=>{
-        console.log("Reset all source records");
+        log.log("Reset all source records");
     }).
     catch(function(err){
       //check for error code, if 401 then could be, wrong relation field name,
@@ -143,7 +143,7 @@ function getTemplates(viewId, data, structure){
             } else {
                 fileName = "template.docx";
             }
-            console.log("Template file name is " + fileName);
+            log.log("Template file name is " + fileName);
             file = templates[i].body;
             templateIdToFiles[templateIdsInOrder[i]] = {"file": file, "name": fileName};
         }
