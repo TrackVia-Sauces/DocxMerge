@@ -305,7 +305,7 @@ function getRecordIdsList(recordList){
  * and then outputs a merged .docx file
  */
 function mergeRecordIntoTemplate(records, template, templateId){
-    console.log("In mergeRecordIntoTemplate");
+    log.log("In mergeRecordIntoTemplate");
 
     //Load the docx file as a binary
     var content = template.file;
@@ -321,8 +321,8 @@ function mergeRecordIntoTemplate(records, template, templateId){
     }})
 
 
-    console.log("Data to merge:");
-    console.log(records);
+    log.log("Data to merge:");
+    log.log(records);
     //create the data structure to merge into the template
     var mergeData = {"page":records};
 
@@ -347,7 +347,7 @@ function mergeRecordIntoTemplate(records, template, templateId){
     var currentTimeStr = formatter.getCurrentDateTime();
     filePath = filePath + "/" + currentTimeStr + "_" + fileName;
     fs.writeFileSync(filePath, buf);
-    console.log("Wrote file to file systems: " + filePath);
+    log.log("Wrote file to file systems: " + filePath);
     return filePath;
 }
 
@@ -401,8 +401,8 @@ function getViewForTable(tableId){
  * @param {Object} err
  */
 function handleError(err){
-    console.log("We had an error:");
-    console.log(util.inspect(err, {showHidden: false, depth: null}))
+    log.error("We had an error:");
+    log.error(util.inspect(err, {showHidden: false, depth: null}))
     if(globalCallback != null){
         globalCallback(null, err);
     }

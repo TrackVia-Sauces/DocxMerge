@@ -1,6 +1,6 @@
 class Log {
   log(message) {
-    console.log(message);
+    console.log(`---   ${message}   ---`);
   }
 
   error(message) {
