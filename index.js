@@ -151,8 +151,6 @@ function getTemplates(viewId, data, structure){
         var mergeData = mergeRecordsIntoTemplates(templatesToRecords, templateIdToFiles, structure)
         uploadMergeFiles(viewId, mergeData, templatesToRecords);
     }).catch(function(err) {
-      //if you get here, try doing a simple GET on the view to see if the viewID is the issue,
-      //if the GET succeeds make sure the field name is correct.
        handleError(err);
     });
 }
@@ -212,13 +210,24 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
         return Promise.all(uploadPromises);
     })
     .then((uploadResponses) =>{
-        console.log("done uploading everything");
+        log.log("done uploading everything");
+
         if(globalCallback){
             globalCallback(null, "Merge completed successfully");
         }
     })
     .catch(function(err) {
-        handleError(err);
+      //if you get here, try doing a simple GET on the view to see if the viewID is the issue,
+      //if the GET succeeds make sure the field name is correct.
+      promises = [];
+      promises.push(api.getView(viewId));
+      Promise.all(promises)
+      .then((view) => {
+        if (promises.length > 0) {
+          return log.error("---   Unable to find field name from merged table, please ensure EXACT match   ---")
+        }
+      })
+      handleError(err);
     });
 }
 
