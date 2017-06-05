@@ -111,7 +111,7 @@ function resetSourceRecordLTP(viewId, records){
     }).
     catch(function(err){
       //check for error code, if 401 then could be, wrong relation field name,
-      log.error("---   Unable to update record. Please ensure template relationship field name matches relationship name on source table EXACTLY   ---")
+      log.error("Unable to update record. Please ensure template relationship field name matches relationship name on source table EXACTLY")
     });
 }
 
@@ -159,7 +159,7 @@ function getTemplates(viewId, data, structure){
 //check if the template view id is numeric
 function checkTemplateViewId(viewId) {
   if (typeof viewId != 'number') {
-    log.error('---    Please ensure template view ids are numeric    ---');
+    log.error('Please ensure template view ids are numeric');
   }
   return viewId;
 }
@@ -218,7 +218,7 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
         }
     })
     .catch(function(err) {
-      checkFieldNames("merged",viewId);
+      checkFieldNames("merged", config.merged_doc_table.view_id);
       handleError(err);
     });
 }
@@ -230,10 +230,23 @@ function checkFieldNames(table, viewId) {
   promises.push(api.getView(viewId));
   Promise.all(promises)
   .then((view) => {
-    if (promises.length > 0) {
-      return log.error(`---   Unable to find field name from ${table} table, please ensure EXACT match   ---`);
+    if ( promises.length > 0 && !findDocFieldName(view[0].structure) ) {
+      return log.error(`Unable to find field name from ${table} table, please ensure EXACT match`);
+    } else if ( promises.length > 0 && findDocFieldName(view[0].structure) ) {
+      return log.error(`Please check you optional field names`);
+    } else {
+      return log.error(`Could not find ${table} view, please check the view id`);
     }
   })
+}
+
+function findDocFieldName(fields) {
+  for (var i = 0; i < fields.length; i++) {
+    if (fields[i].name == config.merged_doc_table.merged_document_field_name ) {
+      return found = true
+    }
+  }
+  return found;
 }
 
 /**
