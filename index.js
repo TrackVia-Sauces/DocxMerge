@@ -1,11 +1,11 @@
 /**
- * 
+ *
  * This sauce relies heavily on the docxtemplater by Edgar Hipp
  * https://github.com/open-xml-templating/docxtemplater
  * The orginal source was changed to allow new-line characters to work
  * as expected by our users.
- * 
- * Grab the libraries we need to 
+ *
+ * Grab the libraries we need to
  * merge docx files
  */
 const util = require('util');
@@ -16,6 +16,7 @@ var path = require('path');
 var TrackviaAPI = require('trackvia-api');
 var FormatHelper = require('./formatHelper.js');
 var config = require('./config');
+var log = require('./log');
 
 //The ID of a record
 const ID_FIELD = "id";
@@ -37,7 +38,7 @@ var formatter = new FormatHelper();
  *****************************************************/
 
 /**
- * Used by our microservice infrastructure to 
+ * Used by our microservice infrastructure to
  * kick off all events
  */
 exports.handler = function(event, context, callback) {
@@ -46,16 +47,16 @@ exports.handler = function(event, context, callback) {
     if(context){
         context.callbackWaitsForEmptyEventLoop = false;
     }
-    console.log('---  starting  ---');
+    log.log('---  starting  ---');
     globalCallback = callback;
-    
+
 
     //Check if we're doing this for a single record
     //or for lots of records
     if (!event.tableId) {
-            console.log('---  No table ID. I am out  ---');
+            log.error('---  No table ID. I am out  ---');
             globalCallback(null, "There's no table ID, so I'm done");
-    } else { 
+    } else {
         //go get the records we need to merge
         getRecordsThatNeedToBeMerged(event.tableId);
     }
@@ -65,7 +66,7 @@ exports.handler = function(event, context, callback) {
 /**
  * This function gets a tableID, finds the viewID, if one exists
  * and then grabs all the records in that view to be merged
- * @param {Number} tableId 
+ * @param {Number} tableId
  */
 function getRecordsThatNeedToBeMerged(tableId){
     //first figure out if we have a viewId associated
@@ -93,8 +94,8 @@ function getRecordsThatNeedToBeMerged(tableId){
 
 /**
  * Reset the LTP for the template in the source folders
- * @param {Number} viewId 
- * @param {Array} records 
+ * @param {Number} viewId
+ * @param {Array} records
  */
 function resetSourceRecordLTP(viewId, records){
     var resetPromises = [];
@@ -107,6 +108,10 @@ function resetSourceRecordLTP(viewId, records){
     Promise.all(resetPromises)
     .then(()=>{
         console.log("Reset all source records");
+    }).
+    catch(function(err){
+      //check for error code, if 401 then could be, wrong relation field name,
+      log.error("---   Unable to update record. Please ensure template relationship field name matches relationship name on source table EXACTLY   ---")
     });
 }
 
@@ -114,7 +119,7 @@ function resetSourceRecordLTP(viewId, records){
 /**
  * This function will grab all the template files
  * that are needed to satisfy the current requests
- * @param {map of data} data 
+ * @param {map of data} data
  */
 function getTemplates(viewId, data, structure){
     //now figure out what templates are at play for which records
@@ -124,7 +129,7 @@ function getTemplates(viewId, data, structure){
     var templateIdsInOrder = [];
     for(id in templatesToRecords){
         templateIdsInOrder.push(id);
-        promises.push(api.getFile(config.template_table.view_id, id, config.template_table.field_name_for_template_document));
+        promises.push(api.getFile(checkTemplateViewId(config.template_table.view_id), id, config.template_table.field_name_for_template_document));
     }
     Promise.all(promises)
     .then((templates) => {
@@ -146,14 +151,24 @@ function getTemplates(viewId, data, structure){
         var mergeData = mergeRecordsIntoTemplates(templatesToRecords, templateIdToFiles, structure)
         uploadMergeFiles(viewId, mergeData, templatesToRecords);
     }).catch(function(err) {
+      //if you get here, try doing a simple GET on the view to see if the viewID is the issue,
+      //if the GET succeeds make sure the field name is correct.
        handleError(err);
     });
+}
+
+//check if the template view id is numeric
+function checkTemplateViewId(viewId) {
+  if (typeof viewId != 'number') {
+    log.error('---    Please ensure template view ids are numeric    ---');
+  }
+  return viewId;
 }
 
 /**
  * This will take in a map of template IDs to the resultant merge files
  * and upload them in the appropriate place
- * @param {object} idsToMergeFiles 
+ * @param {object} idsToMergeFiles
  */
 function uploadMergeFiles(viewId, mergeData, templatesToRecords){
     var promises = [];
@@ -162,11 +177,11 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
         var file = templateMergeData["file"];
         var recordIdList = templateMergeData["recordIds"];
         var userId = templateMergeData["userId"];
-        
+
         var recordIdsStr = recordIdList.join("\n");
         var recordCount = templatesToRecords[id].length;
         var recordData = {};
-        
+
         //if defined update the details
         if(config.merged_doc_table.merged_doc_details_field_name){
             recordData[config.merged_doc_table.merged_doc_details_field_name] = "Merged " + recordCount + " records:\n" + recordIdsStr;
@@ -181,7 +196,7 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
         if(config.merged_doc_table.merge_user_field_name && userId){
             recordData[config.merged_doc_table.merge_user_field_name] = userId;
         }
-        promises.push(api.addRecord(config.merged_doc_table.view_id, recordData));
+        promises.push(api.addRecord( checkTemplateViewId(config.merged_doc_table.view_id), recordData ));
     }
     Promise.all(promises)
     .then((newRecords) =>{
@@ -209,14 +224,14 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
 
 /**
  * Helper function that loops over the function that does the real work
- * @param {*} templatesToRecords 
- * @param {*} templateIdToFiles 
+ * @param {*} templatesToRecords
+ * @param {*} templateIdToFiles
  */
 function mergeRecordsIntoTemplates(templatesToRecords, templateIdToFiles, structure){
-    var idsToMergeFiles = {};    
+    var idsToMergeFiles = {};
     for(var templateId in templateIdToFiles){
         var recordsWithSanitizedFieldNames = formatter.sanitizeData(templatesToRecords[templateId], structure);
-        
+
         //get the user who last updated the source record
         var userId = getLastUpdatedUser(templatesToRecords[templateId]);
         //gets a list of record IDs for the notes
@@ -230,7 +245,7 @@ function mergeRecordsIntoTemplates(templatesToRecords, templateIdToFiles, struct
 
 /**
  * Gets the last user to update the record
- * @param {Map} recordList 
+ * @param {Map} recordList
  */
 function getLastUpdatedUser(recordList){
     var userId = null;
@@ -242,7 +257,7 @@ function getLastUpdatedUser(recordList){
 
 /**
  * Creates a list of recordId values
- * @param {Map} recordList 
+ * @param {Map} recordList
  */
 function getRecordIdsList(recordList){
     var list = [];
@@ -311,10 +326,10 @@ function mergeRecordIntoTemplate(records, template, templateId){
 
 
 /**
- * Given the list of data figures out which templates 
+ * Given the list of data figures out which templates
  * are needed and organizes the data by template
  * for easier merging
- * @param {list of TV record data} data 
+ * @param {list of TV record data} data
  */
 function getDistinctTemplateForRecords(records, template){
     var templatesToRecords = {};
@@ -335,7 +350,7 @@ function getDistinctTemplateForRecords(records, template){
 /**
  * A simple helper function to look up the
  * view ID and do some error handling
- * @param {Number} tableId 
+ * @param {Number} tableId
  */
 function getViewForTable(tableId){
     //make sure we're using a string key
@@ -356,7 +371,7 @@ function getViewForTable(tableId){
 
 /**
  * All error handling goes here
- * @param {Object} err 
+ * @param {Object} err
  */
 function handleError(err){
     console.log("We had an error:");
@@ -366,3 +381,4 @@ function handleError(err){
     }
 }
 
+exports.handler({"tableId":17}, null, null);
