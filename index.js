@@ -156,7 +156,10 @@ function getTemplates(viewId, data, structure){
     });
 }
 
-//check if the template view id is numeric
+/**
+ * Checks to make sure that the viewId is a number
+ * @param {Number} viewId
+ */
 function checkTemplateViewId(viewId) {
   if (typeof viewId != 'number') {
     log.error('Please ensure template view ids are numeric');
@@ -223,9 +226,12 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
     });
 }
 
+/**
+ * Function to determine what field is causing the upload error
+ * @param {String} table
+ * @param {Number} viewId
+ */
 function checkFieldNames(table, viewId) {
-  //if you get here, try doing a simple GET on the view to see if the viewID is the issue,
-  //if the GET succeeds make sure the field name is correct.
   promises = [];
   promises.push(api.getView(viewId));
   Promise.all(promises)
@@ -240,10 +246,14 @@ function checkFieldNames(table, viewId) {
   })
 }
 
+/**
+ * Finds the merged document field name from an array of table columns
+ * @param {Array} fields
+ */
 function findDocFieldName(fields) {
   for (var i = 0; i < fields.length; i++) {
     if (fields[i].name == config.merged_doc_table.merged_document_field_name ) {
-      return found = true
+      return found = true;
     }
   }
   return found;
