@@ -236,7 +236,6 @@ function checkFieldNames(table, viewId) {
   promises.push(api.getView(viewId));
   Promise.all(promises)
   .then((view) => {
-    debugger;
     if ( promises.length > 0 &&
         table == "merged" &&
         !findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_details_field_name) &&
