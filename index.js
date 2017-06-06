@@ -151,7 +151,7 @@ function getTemplates(viewId, data, structure){
         var mergeData = mergeRecordsIntoTemplates(templatesToRecords, templateIdToFiles, structure)
         uploadMergeFiles(viewId, mergeData, templatesToRecords);
     }).catch(function(err) {
-      checkFieldNames("template", viewId)
+      checkFieldNames("template", config.template_table.view_id);
       handleError(err);
     });
 }
@@ -236,10 +236,39 @@ function checkFieldNames(table, viewId) {
   promises.push(api.getView(viewId));
   Promise.all(promises)
   .then((view) => {
-    if ( promises.length > 0 && !findDocFieldName(view[0].structure) ) {
+    debugger;
+    if ( promises.length > 0 &&
+        table == "merged" &&
+        !findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_details_field_name) &&
+        findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_to_template_relationship_field_name) &&
+        findDocFieldName(view[0].structure, config.merged_doc_table.merged_document_field_name) &&
+        findDocFieldName(view[0].structure, config.merged_doc_table.merge_user_field_name) ) {
+      return log.error(`Unable to find details field from ${table} table, please ensure EXACT match`);
+    } else if ( promises.length > 0 &&
+        table == "merged" &&
+        findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_details_field_name) &&
+        !findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_to_template_relationship_field_name) &&
+        findDocFieldName(view[0].structure, config.merged_doc_table.merged_document_field_name) &&
+        findDocFieldName(view[0].structure, config.merged_doc_table.merge_user_field_name) ) {
+      return log.error(`Unable to find template relationship from ${table} table, please ensure EXACT match`);
+    } else if ( promises.length > 0 &&
+        table == "merged" &&
+        findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_details_field_name) &&
+        findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_to_template_relationship_field_name) &&
+        !findDocFieldName(view[0].structure, config.merged_doc_table.merged_document_field_name) &&
+        findDocFieldName(view[0].structure, config.merged_doc_table.merge_user_field_name) ) {
       return log.error(`Unable to find field name from ${table} table, please ensure EXACT match`);
-    } else if ( promises.length > 0 && findDocFieldName(view[0].structure) ) {
-      return log.error(`Please check you optional field names`);
+    } else if ( promises.length > 0 &&
+        table == "merged" &&
+        findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_details_field_name) &&
+        findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_to_template_relationship_field_name) &&
+        findDocFieldName(view[0].structure, config.merged_doc_table.merged_document_field_name) &&
+        !findDocFieldName(view[0].structure, config.merged_doc_table.merge_user_field_name) ) {
+      return log.error(`Unable to find user field name from ${table} table, please ensure EXACT match`);
+    } else if ( promises.length > 0 &&
+        table == "template" &&
+        !findDocFieldName(view[0].structure, config.template_table.field_name_for_template_document) ) {
+      return log.error(`Unable to find field name from ${table} table, please ensure EXACT match`);
     } else {
       return log.error(`Could not find ${table} view, please check the view id`);
     }
@@ -250,9 +279,10 @@ function checkFieldNames(table, viewId) {
  * Finds the merged document field name from an array of table columns
  * @param {Array} fields
  */
-function findDocFieldName(fields) {
+function findDocFieldName(fields, findName) {
+  var found = false;
   for (var i = 0; i < fields.length; i++) {
-    if (fields[i].name == config.merged_doc_table.merged_document_field_name ) {
+    if (fields[i].name == findName ) {
       return found = true;
     }
   }
