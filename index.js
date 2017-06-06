@@ -446,5 +446,3 @@ function handleError(err){
         globalCallback(null, err);
     }
 }
-
-exports.handler({"tableId":17}, null, null);
