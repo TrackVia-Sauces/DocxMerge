@@ -233,36 +233,41 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
  */
 function checkFieldNames(table, viewId) {
   promises = [];
+  let mergeFieldName = config.merged_doc_table.merged_doc_details_field_name;
+  let mergeTemplateRelationship = config.merged_doc_table.merged_doc_to_template_relationship_field_name;
+  let mergeDocumentField = config.merged_doc_table.merged_document_field_name;
+  let mergeUserField = config.merged_doc_table.merge_user_field_name;
+
   promises.push(api.getView(viewId));
   Promise.all(promises)
   .then((view) => {
     if ( promises.length > 0 &&
         table == "merged" &&
-        !findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_details_field_name) &&
-        findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_to_template_relationship_field_name) &&
-        findDocFieldName(view[0].structure, config.merged_doc_table.merged_document_field_name) &&
-        findDocFieldName(view[0].structure, config.merged_doc_table.merge_user_field_name) ) {
+        !findDocFieldName(view[0].structure, mergeFieldName) &&
+        findDocFieldName(view[0].structure, mergeTemplateRelationship) &&
+        findDocFieldName(view[0].structure, mergeDocumentField) &&
+        findDocFieldName(view[0].structure, mergeUserField) ) {
       return log.error(`Unable to find details field from ${table} table, please ensure EXACT match`);
     } else if ( promises.length > 0 &&
         table == "merged" &&
-        findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_details_field_name) &&
-        !findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_to_template_relationship_field_name) &&
-        findDocFieldName(view[0].structure, config.merged_doc_table.merged_document_field_name) &&
-        findDocFieldName(view[0].structure, config.merged_doc_table.merge_user_field_name) ) {
+        findDocFieldName(view[0].structure, mergeFieldName) &&
+        !findDocFieldName(view[0].structure, mergeTemplateRelationship) &&
+        findDocFieldName(view[0].structure, mergeDocumentField) &&
+        findDocFieldName(view[0].structure, mergeUserField) ) {
       return log.error(`Unable to find template relationship from ${table} table, please ensure EXACT match`);
     } else if ( promises.length > 0 &&
         table == "merged" &&
-        findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_details_field_name) &&
-        findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_to_template_relationship_field_name) &&
-        !findDocFieldName(view[0].structure, config.merged_doc_table.merged_document_field_name) &&
-        findDocFieldName(view[0].structure, config.merged_doc_table.merge_user_field_name) ) {
+        findDocFieldName(view[0].structure, mergeFieldName) &&
+        findDocFieldName(view[0].structure, mergeTemplateRelationship) &&
+        !findDocFieldName(view[0].structure, mergeDocumentField) &&
+        findDocFieldName(view[0].structure, mergeUserField) ) {
       return log.error(`Unable to find field name from ${table} table, please ensure EXACT match`);
     } else if ( promises.length > 0 &&
         table == "merged" &&
-        findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_details_field_name) &&
-        findDocFieldName(view[0].structure, config.merged_doc_table.merged_doc_to_template_relationship_field_name) &&
-        findDocFieldName(view[0].structure, config.merged_doc_table.merged_document_field_name) &&
-        !findDocFieldName(view[0].structure, config.merged_doc_table.merge_user_field_name) ) {
+        findDocFieldName(view[0].structure, mergeFieldName) &&
+        findDocFieldName(view[0].structure, mergeTemplateRelationship) &&
+        findDocFieldName(view[0].structure, mergeDocumentField) &&
+        !findDocFieldName(view[0].structure, mergeUserField) ) {
       return log.error(`Unable to find user field name from ${table} table, please ensure EXACT match`);
     } else if ( promises.length > 0 &&
         table == "template" &&
@@ -446,3 +451,5 @@ function handleError(err){
         globalCallback(null, err);
     }
 }
+
+exports.handler({"tableId":17}, null, null);
