@@ -51,7 +51,7 @@ exports.handler = function(event, context, callback) {
     if(context){
         context.callbackWaitsForEmptyEventLoop = false;
     }
-    log.log('---  starting  ---');
+    log.log('starting');
     checkTemplateViewId(config.template_table.view_id);
     checkTemplateViewId(config.merged_doc_table.view_id);
     globalCallback = callback;
@@ -59,7 +59,7 @@ exports.handler = function(event, context, callback) {
     //Check if we're doing this for a single record
     //or for lots of records
     if (!event.tableId) {
-            log.error('---  No table ID. I am out  ---');
+            log.error('No table ID. I am out');
             globalCallback(null, "There's no table ID, so I'm done");
     } else {
         //go get the records we need to merge
@@ -166,7 +166,7 @@ function getTemplates(viewId, data, structure){
  * @param {Number} viewId
  */
 function checkTemplateViewId(viewId) {
-  if (typeof viewId != 'number' || viewId <= 0) {
+  if (isNaN(parseInt(viewId)) || viewId <= 0) {
     log.error('Please ensure template view ids are numeric and greater than 0');
   }
   return viewId;
@@ -237,44 +237,14 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
  * @param {Number} viewId
  */
 function checkFieldNames(table, viewId) {
-  promises = [];
-  let mergeFieldName = config.merged_doc_table.merged_doc_details_field_name;
-  let mergeTemplateRelationship = config.merged_doc_table.merged_doc_to_template_relationship_field_name;
-  let mergeDocumentField = config.merged_doc_table.merged_document_field_name;
-  let mergeUserField = config.merged_doc_table.merge_user_field_name;
-  let structure = view.structure;
-
   api.getView(viewId)
   .then((view) => {
-    if ( table == 0 &&
-        !findDocFieldName(structure, mergeFieldName) &&
-        findDocFieldName(structure, mergeTemplateRelationship) &&
-        findDocFieldName(structure, mergeDocumentField) &&
-        findDocFieldName(structure, mergeUserField) ) {
-      return log.error(`Unable to find details field from merge table, please ensure EXACT match`);
-    } else if ( table == 0 &&
-        findDocFieldName(structure, mergeFieldName) &&
-        !findDocFieldName(structure, mergeTemplateRelationship) &&
-        findDocFieldName(structure, mergeDocumentField) &&
-        findDocFieldName(structure, mergeUserField) ) {
-      return log.error(`Unable to find template relationship from merge table, please ensure EXACT match`);
-    } else if ( table == 0 &&
-        findDocFieldName(structure, mergeFieldName) &&
-        findDocFieldName(structure, mergeTemplateRelationship) &&
-        !findDocFieldName(structure, mergeDocumentField) &&
-        findDocFieldName(structure, mergeUserField) ) {
-      return log.error(`Unable to find field name from merge table, please ensure EXACT match`);
-    } else if ( table == 0 &&
-        findDocFieldName(structure, mergeFieldName) &&
-        findDocFieldName(structure, mergeTemplateRelationship) &&
-        findDocFieldName(structure, mergeDocumentField) &&
-        !findDocFieldName(structure, mergeUserField) ) {
-      return log.error(`Unable to find user field name from merge table, please ensure EXACT match`);
-    } else if ( table == 1 &&
-        !findDocFieldName(structure, config.template_table.field_name_for_template_document) ) {
-      return log.error(`Unable to find field name from template table, please ensure EXACT match`);
-    } else {
-      return log.error(`Could not find view, please check the view id for template and merge sections`);
+    let structure = createFieldsObject(view.structure);
+    for (let field in config.export_fields) {
+      let fieldValue = config.export_fields[field];
+      if ( !fields[fieldValue] ) {
+        log.error(`Couldn't find the field \"${fieldValue}\" in the table \"${table}\". This value is set in config.js as the value for \"${field}\"`);
+      }
     }
   })
   .catch(() => {
@@ -282,18 +252,12 @@ function checkFieldNames(table, viewId) {
   });
 }
 
-/**
- * Finds the merged document field name from an array of table columns
- * @param {Array} fields
- */
-function findDocFieldName(fields, findName) {
-  var found = false;
-  for (var i = 0; i < fields.length; i++) {
-    if (fields[i].name == findName ) {
-      return found = true;
-    }
-  }
-  return found;
+function createFieldsObject(structure) {
+  fields = {};
+  structure.forEach((field) => {
+    fields[field.name] = true;
+  });
+  return fields;
 }
 
 /**
