@@ -25,8 +25,8 @@ const RECORD_ID_FIELD = "Record ID";
 
 const LAST_USER_ID_FIELD = "Last User(id)";
 const TABLES = {
-  MERGE: 0,
-  TEMPLATE: 1
+  MERGE: "MERGE",
+  TEMPLATE: "TEMPLATE"
 };
 
 //The TrackVia api for interaction with the data
@@ -87,7 +87,7 @@ function getRecordsThatNeedToBeMerged(tableId){
         var data = response.data;
         var structure = response.structure;
         log.log("Records found in view: " + data.length);
-        resetSourceRecordLTP(viewId, data)
+        resetSourceRecordLTP(viewId, data);
 
         //now figure out what templates are at play for which records
        getTemplates(viewId, data, structure);
@@ -226,6 +226,7 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
         }
     })
     .catch(function(err) {
+      debugger;
       checkFieldNames(TABLES.MERGE, config.merged_doc_table.view_id);
       handleError(err);
     });
@@ -242,7 +243,7 @@ function checkFieldNames(table, viewId) {
     let structure = createFieldsObject(view.structure);
     for (let field in config.export_fields) {
       let fieldValue = config.export_fields[field];
-      if ( !fields[fieldValue] ) {
+      if (!fields[fieldValue]) {
         log.error(`Couldn't find the field \"${fieldValue}\" in the table \"${table}\". This value is set in config.js as the value for \"${field}\"`);
       }
     }
