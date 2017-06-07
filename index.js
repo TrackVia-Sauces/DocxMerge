@@ -241,8 +241,9 @@ function checkFieldNames(table, viewId) {
   api.getView(viewId)
   .then((view) => {
     let structure = createFieldsObject(view.structure);
-    for (let field in config.export_fields) {
-      let fieldValue = config.export_fields[field];
+    debugger;
+    for (let field in config.export_fields[table]) {
+      let fieldValue = config.export_fields[table][field];
       if (!fields[fieldValue]) {
         log.error(`Couldn't find the field \"${fieldValue}\" in the table \"${table}\". This value is set in config.js as the value for \"${field}\"`);
       }
