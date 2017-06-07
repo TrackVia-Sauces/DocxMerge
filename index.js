@@ -24,6 +24,10 @@ const ID_FIELD = "id";
 const RECORD_ID_FIELD = "Record ID";
 
 const LAST_USER_ID_FIELD = "Last User(id)";
+const TABLES = {
+  MERGE: 0,
+  TEMPLATE: 1
+};
 
 //The TrackVia api for interaction with the data
 var api = new TrackviaAPI(config.account.api_key, config.account.environment);
@@ -48,8 +52,9 @@ exports.handler = function(event, context, callback) {
         context.callbackWaitsForEmptyEventLoop = false;
     }
     log.log('---  starting  ---');
+    checkTemplateViewId(config.template_table.view_id);
+    checkTemplateViewId(config.merged_doc_table.view_id);
     globalCallback = callback;
-
 
     //Check if we're doing this for a single record
     //or for lots of records
@@ -129,7 +134,7 @@ function getTemplates(viewId, data, structure){
     var templateIdsInOrder = [];
     for(id in templatesToRecords){
         templateIdsInOrder.push(id);
-        promises.push(api.getFile(checkTemplateViewId(config.template_table.view_id), id, config.template_table.field_name_for_template_document));
+        promises.push(api.getFile(config.template_table.view_id, id, config.template_table.field_name_for_template_document));
     }
     Promise.all(promises)
     .then((templates) => {
@@ -151,7 +156,7 @@ function getTemplates(viewId, data, structure){
         var mergeData = mergeRecordsIntoTemplates(templatesToRecords, templateIdToFiles, structure)
         uploadMergeFiles(viewId, mergeData, templatesToRecords);
     }).catch(function(err) {
-      checkFieldNames("template", config.template_table.view_id);
+      checkFieldNames(TABLES.TEMPLATE, config.template_table.view_id);
       handleError(err);
     });
 }
@@ -161,8 +166,8 @@ function getTemplates(viewId, data, structure){
  * @param {Number} viewId
  */
 function checkTemplateViewId(viewId) {
-  if (typeof viewId != 'number') {
-    log.error('Please ensure template view ids are numeric');
+  if (typeof viewId != 'number' || viewId <= 0) {
+    log.error('Please ensure template view ids are numeric and greater than 0');
   }
   return viewId;
 }
@@ -198,7 +203,7 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
         if(config.merged_doc_table.merge_user_field_name && userId){
             recordData[config.merged_doc_table.merge_user_field_name] = userId;
         }
-        promises.push(api.addRecord( checkTemplateViewId(config.merged_doc_table.view_id), recordData ));
+        promises.push(api.addRecord(config.merged_doc_table.view_id, recordData ));
     }
     Promise.all(promises)
     .then((newRecords) =>{
@@ -221,7 +226,7 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
         }
     })
     .catch(function(err) {
-      checkFieldNames("merged", config.merged_doc_table.view_id);
+      checkFieldNames(TABLES.MERGE, config.merged_doc_table.view_id);
       handleError(err);
     });
 }
@@ -237,46 +242,44 @@ function checkFieldNames(table, viewId) {
   let mergeTemplateRelationship = config.merged_doc_table.merged_doc_to_template_relationship_field_name;
   let mergeDocumentField = config.merged_doc_table.merged_document_field_name;
   let mergeUserField = config.merged_doc_table.merge_user_field_name;
+  let structure = view.structure;
 
-  promises.push(api.getView(viewId));
-  Promise.all(promises)
+  api.getView(viewId)
   .then((view) => {
-    if ( promises.length > 0 &&
-        table == "merged" &&
-        !findDocFieldName(view[0].structure, mergeFieldName) &&
-        findDocFieldName(view[0].structure, mergeTemplateRelationship) &&
-        findDocFieldName(view[0].structure, mergeDocumentField) &&
-        findDocFieldName(view[0].structure, mergeUserField) ) {
-      return log.error(`Unable to find details field from ${table} table, please ensure EXACT match`);
-    } else if ( promises.length > 0 &&
-        table == "merged" &&
-        findDocFieldName(view[0].structure, mergeFieldName) &&
-        !findDocFieldName(view[0].structure, mergeTemplateRelationship) &&
-        findDocFieldName(view[0].structure, mergeDocumentField) &&
-        findDocFieldName(view[0].structure, mergeUserField) ) {
-      return log.error(`Unable to find template relationship from ${table} table, please ensure EXACT match`);
-    } else if ( promises.length > 0 &&
-        table == "merged" &&
-        findDocFieldName(view[0].structure, mergeFieldName) &&
-        findDocFieldName(view[0].structure, mergeTemplateRelationship) &&
-        !findDocFieldName(view[0].structure, mergeDocumentField) &&
-        findDocFieldName(view[0].structure, mergeUserField) ) {
-      return log.error(`Unable to find field name from ${table} table, please ensure EXACT match`);
-    } else if ( promises.length > 0 &&
-        table == "merged" &&
-        findDocFieldName(view[0].structure, mergeFieldName) &&
-        findDocFieldName(view[0].structure, mergeTemplateRelationship) &&
-        findDocFieldName(view[0].structure, mergeDocumentField) &&
-        !findDocFieldName(view[0].structure, mergeUserField) ) {
-      return log.error(`Unable to find user field name from ${table} table, please ensure EXACT match`);
-    } else if ( promises.length > 0 &&
-        table == "template" &&
-        !findDocFieldName(view[0].structure, config.template_table.field_name_for_template_document) ) {
-      return log.error(`Unable to find field name from ${table} table, please ensure EXACT match`);
+    if ( table == 0 &&
+        !findDocFieldName(structure, mergeFieldName) &&
+        findDocFieldName(structure, mergeTemplateRelationship) &&
+        findDocFieldName(structure, mergeDocumentField) &&
+        findDocFieldName(structure, mergeUserField) ) {
+      return log.error(`Unable to find details field from merge table, please ensure EXACT match`);
+    } else if ( table == 0 &&
+        findDocFieldName(structure, mergeFieldName) &&
+        !findDocFieldName(structure, mergeTemplateRelationship) &&
+        findDocFieldName(structure, mergeDocumentField) &&
+        findDocFieldName(structure, mergeUserField) ) {
+      return log.error(`Unable to find template relationship from merge table, please ensure EXACT match`);
+    } else if ( table == 0 &&
+        findDocFieldName(structure, mergeFieldName) &&
+        findDocFieldName(structure, mergeTemplateRelationship) &&
+        !findDocFieldName(structure, mergeDocumentField) &&
+        findDocFieldName(structure, mergeUserField) ) {
+      return log.error(`Unable to find field name from merge table, please ensure EXACT match`);
+    } else if ( table == 0 &&
+        findDocFieldName(structure, mergeFieldName) &&
+        findDocFieldName(structure, mergeTemplateRelationship) &&
+        findDocFieldName(structure, mergeDocumentField) &&
+        !findDocFieldName(structure, mergeUserField) ) {
+      return log.error(`Unable to find user field name from merge table, please ensure EXACT match`);
+    } else if ( table == 1 &&
+        !findDocFieldName(structure, config.template_table.field_name_for_template_document) ) {
+      return log.error(`Unable to find field name from template table, please ensure EXACT match`);
     } else {
-      return log.error(`Could not find ${table} view, please check the view id`);
+      return log.error(`Could not find view, please check the view id for template and merge sections`);
     }
   })
+  .catch(() => {
+    return log.error(`Could not find ${table} view, please check the view id`);
+  });
 }
 
 /**

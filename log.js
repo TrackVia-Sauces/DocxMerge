@@ -4,7 +4,7 @@ class Log {
   }
 
   error(message) {
-    console.log(`---   ${message}   ---`);
+    console.log(`---   ERROR: ${message}   ---`);
   }
 
 }
