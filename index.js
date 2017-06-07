@@ -226,7 +226,6 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
         }
     })
     .catch(function(err) {
-      debugger;
       checkFieldNames(TABLES.MERGE, config.merged_doc_table.view_id);
       handleError(err);
     });
@@ -241,7 +240,6 @@ function checkFieldNames(table, viewId) {
   api.getView(viewId)
   .then((view) => {
     let structure = createFieldsObject(view.structure);
-    debugger;
     for (let field in config.export_fields[table]) {
       let fieldValue = config.export_fields[table][field];
       if (!fields[fieldValue]) {
