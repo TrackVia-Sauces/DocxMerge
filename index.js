@@ -111,7 +111,7 @@ function resetSourceRecordLTP(viewId, records){
     }).
     catch(function(err){
       //check for error code, if 401 then could be, wrong relation field name,
-      log.error("Unable to update record. Please ensure template relationship field name matches relationship name on source table EXACTLY")
+      log.error("Unable to unset relationship to template. Please ensure template relationship field name, \"" + config.source_tables.template_relationship_field_name + "\" matches relationship name on source table EXACTLY, and be sure that \"" + viewId + "\" is the correct view for sending merge data to templates.");
     });
 }
 
