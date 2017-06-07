@@ -6,9 +6,9 @@ config.merged_doc_table = {};
 config.source_tables = {};
 
 /*************************************************************************************************************
- * 
+ *
  * Configuration goes below here:
- * 
+ *
  ************************************************************************************************************/
 
 /************************* Account Config *********************************/
@@ -59,7 +59,7 @@ config.merged_doc_table.merge_user_field_name = "Merge By User";
 //this needs to be the same across all tables that will
 //have their records merged
 config.source_tables.template_relationship_field_name = "Merge Template";
-//This config does not need to be edited. It'll modify the field name above to point 
+//This config does not need to be edited. It'll modify the field name above to point
 //to the numeric ID of the relationship
 config.source_tables.template_relationship_field_name_id = config.source_tables.template_relationship_field_name + "(id)";
 
@@ -73,8 +73,22 @@ config.source_tables.table_ids_to_view_ids = {
                             };
 
 /*************************************************************************************************************
- * 
+ *
  * End config. You're all done configuring
- * 
+ *
  ************************************************************************************************************/
+
+ //***********  DO NOT TOUCH - object is used in merge  ********
+ config.export_fields = {
+   'TEMPLATE' : {
+     'config.template_table.field_name_for_template_document' : config.template_table.field_name_for_template_document
+   },
+   'MERGE' : {
+     'config.merged_doc_table.merged_document_field_name' : config.merged_doc_table.merged_document_field_name,
+     'config.merged_doc_table.merged_doc_details_field_name' : config.merged_doc_table.merged_doc_details_field_name,
+     'config.merged_doc_table.merged_doc_to_template_relationship_field_name' : config.merged_doc_table.merged_doc_to_template_relationship_field_name,
+     'config.merged_doc_table.merge_user_field_name' : config.merged_doc_table.merge_user_field_name,
+   }
+ }
+
 module.exports = config;
