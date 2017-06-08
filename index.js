@@ -248,7 +248,7 @@ function checkFieldNames(table, viewId) {
     }
   })
   .catch(() => {
-    return log.error(`Could not find ${table} view, please check the view id`);
+    return log.error(`Could not find ${table} view, please check the view id: "${viewId}"`);
   });
 }
 
