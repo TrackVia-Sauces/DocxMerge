@@ -13,7 +13,7 @@ var JSZip = require('jszip');
 var Docxtemplater = require('./docxtemplater/js/docxtemplater.js');
 var fs = require('fs');
 var path = require('path');
-var TrackviaAPI = require('trackvia-api');
+var TrackviaAPI = require('./api-src/trackvia-api.js');
 var FormatHelper = require('./formatHelper.js');
 var config = require('./config');
 var log = require('./log');
@@ -157,7 +157,6 @@ function getTemplates(viewId, data, structure){
         uploadMergeFiles(viewId, mergeData, templatesToRecords);
     }).catch(function(err) {
       checkFieldNames(TABLES.TEMPLATE, config.template_table.view_id);
-      handleError(err);
     });
 }
 
@@ -227,7 +226,6 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
     })
     .catch(function(err) {
       checkFieldNames(TABLES.MERGE, config.merged_doc_table.view_id);
-      handleError(err);
     });
 }
 
@@ -247,8 +245,12 @@ function checkFieldNames(table, viewId) {
       }
     }
   })
-  .catch(() => {
-    return log.error(`Could not find ${table} view, please check the view id: "${viewId}"`);
+  .catch((err) => {
+    if(err.response_code == 401){
+      log.error(`Could not find ${table} view, please check the view id: "${viewId}"`);
+      return;
+    }
+    handleError(err);
   });
 }
 
@@ -412,9 +414,17 @@ function getViewForTable(tableId){
  * @param {Object} err
  */
 function handleError(err){
-    log.error("We had an error:");
-    log.error(util.inspect(err, {showHidden: false, depth: null}))
+    let parsedError = {
+      'status'  : err.statusCode,
+      'href'    : err.request.href,
+      'verb'    : err.request.method,
+      'headers' : err.headers,
+      'body'    : err.body
+    }
+    log.error(util.inspect(parsedError, {showHidden: false, depth: null}))
     if(globalCallback != null){
         globalCallback(null, err);
     }
 }
+
+exports.handler({"tableId":17}, null, null);
