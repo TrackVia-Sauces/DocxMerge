@@ -3,4 +3,5 @@ Archive.zip
 node_modules
 config.js
 Archive.zip
-
+.DS_Store
+*.zip
