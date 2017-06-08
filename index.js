@@ -400,7 +400,7 @@ function getViewForTable(tableId){
     //map of tables to views
     if(!(tableId in config.source_tables.table_ids_to_view_ids)){
         var errorStr = "There's no entry in our map for table: " + tableId + ". End";
-        handleError(errorStr);
+        log.error(errorStr);
         return;
     }
 
