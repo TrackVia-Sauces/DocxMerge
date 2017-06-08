@@ -246,7 +246,7 @@ function checkFieldNames(table, viewId) {
     }
   })
   .catch((err) => {
-    if(err.response_code == 401){
+    if(err.statusCode == 401){
       log.error(`Could not find ${table} view, please check the view id: "${viewId}"`);
       return;
     }
