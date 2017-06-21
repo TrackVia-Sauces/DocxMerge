@@ -9,10 +9,10 @@
   "author": "TrackVia",
   "license": "Apache",
   "dependencies": {
-    "promise": "^7.1.1",
-    "trackvia-api": "^1.0.0",
     "dateformat": "2.0.0",
-    "xmldom": "0.1.27",
-    "jszip": "2.6.1"
+    "jszip": "2.6.1",
+    "promise": "^7.1.1",
+    "trackvia-api": "^1.7.1",
+    "xmldom": "0.1.27"
   }
 }
