@@ -157,7 +157,6 @@ function getTemplates(viewId, data, structure){
         uploadMergeFiles(viewId, mergeData, templatesToRecords);
     }).catch(function(err) {
       checkFieldNames(TABLES.TEMPLATE, config.template_table.view_id);
-      handleError(err);
     });
 }
 
@@ -227,7 +226,6 @@ function uploadMergeFiles(viewId, mergeData, templatesToRecords){
     })
     .catch(function(err) {
       checkFieldNames(TABLES.MERGE, config.merged_doc_table.view_id);
-      handleError(err);
     });
 }
 
@@ -247,8 +245,12 @@ function checkFieldNames(table, viewId) {
       }
     }
   })
-  .catch(() => {
-    return log.error(`Could not find ${table} view, please check the view id: "${viewId}"`);
+  .catch((err) => {
+    if(err.statusCode == 401){
+      log.error(`Could not find ${table} view, please check the view id: "${viewId}"`);
+      return;
+    }
+    handleError(err);
   });
 }
 
@@ -398,7 +400,7 @@ function getViewForTable(tableId){
     //map of tables to views
     if(!(tableId in config.source_tables.table_ids_to_view_ids)){
         var errorStr = "There's no entry in our map for table: " + tableId + ". End";
-        handleError(errorStr);
+        log.error(errorStr);
         return;
     }
 
@@ -412,8 +414,14 @@ function getViewForTable(tableId){
  * @param {Object} err
  */
 function handleError(err){
-    log.error("We had an error:");
-    log.error(util.inspect(err, {showHidden: false, depth: null}))
+    let parsedError = {
+      'status'  : err.statusCode,
+      'href'    : err.request.href,
+      'verb'    : err.request.method,
+      'headers' : err.headers,
+      'body'    : err.body
+    }
+    log.error(util.inspect(parsedError, {showHidden: false, depth: null}))
     if(globalCallback != null){
         globalCallback(null, err);
     }
