@@ -63,27 +63,51 @@ exports.handler = function(event, context, callback) {
             globalCallback(null, "There's no table ID, so I'm done");
     } else {
         //go get the records we need to merge
-        getRecordsThatNeedToBeMerged(event.tableId);
+        login(event.tableId);
     }
 }
 
+
+/**
+ * Log the user in
+ * @param {Number} tableId
+ */
+function login(tableId){
+    //first figure out if we have a viewId associated
+    //with this table Id
+    var viewId = getViewForTable(tableId);
+    log.log("ViewId is: " + viewId);
+    //now login
+
+    //check really hard for a valid access token
+    if(config.account.access_token 
+        && typeof config.account.access_token === 'string' 
+        && config.account.access_token.length > 20){
+            log.log("Access token seems valid, using that to authorize");
+        //access token
+        api.setAccessToken(config.account.access_token);
+        getRecordsThatNeedToBeMerged(tableId, viewId);
+    } else {
+        log.log("Access token does not seem valid, using username and password");
+        api.login(config.account.username, config.account.password)
+        .then(()=>{
+            getRecordsThatNeedToBeMerged(tableId, viewId);
+        })
+        .catch(function(err) {
+            handleError(err);
+        });
+    }
+}
 
 /**
  * This function gets a tableID, finds the viewID, if one exists
  * and then grabs all the records in that view to be merged
  * @param {Number} tableId
  */
-function getRecordsThatNeedToBeMerged(tableId){
-    //first figure out if we have a viewId associated
-    //with this table Id
-    var viewId = getViewForTable(tableId);
-    log.log("ViewId is: " + viewId);
-    //now login
-    api.login(config.account.username, config.account.password)
-    .then(() => {
-        log.log('Logged In.');
-        return api.getView(viewId, {"start": 0, "max": 1000})
-    }).then((response) =>{
+function getRecordsThatNeedToBeMerged(tableId, viewId){
+    log.log('Logged In.');
+    api.getView(viewId, {"start": 0, "max": 1000})
+    .then((response) =>{
         var data = response.data;
         var structure = response.structure;
         log.log("Records found in view: " + data.length);
@@ -415,9 +439,9 @@ function getViewForTable(tableId){
  */
 function handleError(err){
     let parsedError = {
-      'status'  : err.statusCode,
-      'href'    : err.request.href,
-      'verb'    : err.request.method,
+      'status'  : err.status,
+      'href'    : err.href,
+      'verb'    : err.verb,
       'headers' : err.headers,
       'body'    : err.body
     }
