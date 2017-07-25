@@ -17,10 +17,18 @@ config.source_tables = {};
 config.account.api_key = '8675309';
 
 //The name of the user to login as
+//Use username and password if you're
+//not using an access token to authorize this
+//microservice. 
 config.account.username = 'user@user.com';
 
 //The password of the user to login as
 config.account.password = 'correcthorsebatterystaple';
+
+//If you're not using username/password you can use an access token
+//to authorize this microservice. If a access_token is present
+//the username/password will be ignored. 
+config.account.access_token = '';
 
 //The address of the server you'll be using
 config.account.environment = 'https://go.trackvia.com';
