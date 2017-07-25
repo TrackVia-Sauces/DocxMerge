@@ -24,10 +24,18 @@ First copy the [config.template.js file](https://github.com/TrackVia-Sauces/Docx
 config.account.api_key = '8675309';
 
 //The name of the user to login as
+//Use username and password if you're
+//not using an access token to authorize this
+//microservice. 
 config.account.username = 'user@user.com';
 
 //The password of the user to login as
 config.account.password = 'correcthorsebatterystaple';
+
+//If you're not using username/password you can use an access token
+//to authorize this microservice. If a access_token is present
+//the username/password will be ignored. 
+config.account.access_token = '';
 
 //The address of the server you'll be using
 config.account.environment = 'https://go.trackvia.com';
@@ -66,7 +74,7 @@ config.merged_doc_table.merge_user_field_name = "Merge By User";
 //this needs to be the same across all tables that will
 //have their records merged
 config.source_tables.template_relationship_field_name = "Merge Template";
-//This config does not need to be edited. It'll modify the field name above to point 
+//This config does not need to be edited. It'll modify the field name above to point
 //to the numeric ID of the relationship
 config.source_tables.template_relationship_field_name_id = config.source_tables.template_relationship_field_name + "(id)";
 
@@ -79,6 +87,11 @@ config.source_tables.table_ids_to_view_ids = {
                                 "3" : 4
                             };
 
+/*************************************************************************************************************
+ *
+ * End config. You're all done configuring
+ *
+ ************************************************************************************************************/
 ```
 
 Once you've configured your config.js file, zip up everything, and use that zip file as your source file for configuring the TrackVia microservice.
