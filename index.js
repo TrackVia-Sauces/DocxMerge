@@ -80,8 +80,8 @@ function login(tableId){
     //now login
 
     //check really hard for a valid access token
-    if(config.account.access_token 
-        && typeof config.account.access_token === 'string' 
+    if(config.account.access_token
+        && typeof config.account.access_token === 'string'
         && config.account.access_token.length > 20){
             log.log("Access token seems valid, using that to authorize");
         //access token
@@ -165,7 +165,7 @@ function getTemplates(viewId, data, structure){
         var templateIdToFiles = {};
         for(i in templateIdsInOrder){
             //get the file name if it's in there
-            var fileName = templates[i].response.headers["content-disposition"];
+            var fileName = templates[i].response.headers["content-disposition"].replace(/"/g, '');
             if(fileName.indexOf("filename=") > 0){
                 var index = fileName.indexOf("filename=") + "filename=".length;
                 fileName = fileName.substr(index);
@@ -450,3 +450,5 @@ function handleError(err){
         globalCallback(null, err);
     }
 }
+
+exports.handler({tableId: 17},{},()=>{})
