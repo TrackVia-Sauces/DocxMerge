@@ -10,7 +10,8 @@
  */
 const util = require('util');
 var JSZip = require('jszip');
-var Docxtemplater = require('./docxtemplater/js/docxtemplater.js');
+var Docxtemplater = require('docxtemplater');
+var ImageModule = require('docxtemplater-image-module');
 var fs = require('fs');
 var path = require('path');
 var TrackviaAPI = require('trackvia-api');
@@ -104,17 +105,44 @@ function login(tableId){
  * and then grabs all the records in that view to be merged
  * @param {Number} tableId
  */
-function getRecordsThatNeedToBeMerged(tableId, viewId){
+async function getRecordsThatNeedToBeMerged(tableId, viewId){
     log.log('Logged In.');
     api.getView(viewId, {"start": 0, "max": 1000})
     .then((response) =>{
+
         var data = response.data;
         var structure = response.structure;
-        log.log("Records found in view: " + data.length);
-        resetSourceRecordLTP(viewId, data);
+        // search the structure of the field for an image field
+        let imageFields = [];
+        for(let field of structure) {
+            if(field.type === 'image') {
+                imageFields.push(field.name);
+            }
+        }
+        // get all the images for the records
+        let imagesToRetrieve = [];
+        for(let record of data) {
+            for(let field of imageFields) {
+                imagesToRetrieve.push(api.getFile(viewId, record['Record ID'], field))
+            }
+        }
+        Promise.all(imagesToRetrieve).then(imageData => {
+            // update the records to contain the image contents
+            for(let record of data) {
+                let imagesForRecord = imageData.splice(0, imageFields.length);
+                for(let index in imageFields) {
+                    imageType = imagesForRecord[index].response.headers['content-disposition'].match(/"(.*)"/).pop().split('.')[1];
+                    imageContents = imagesForRecord[index]['body'];
+                    imageB64 = `data:image/${imageType};base64,${Buffer.from(imageContents, 'binary').toString('base64')}`;
+                    record[imageFields[index]] = imageB64;
+                }
+            }
+            log.log("Records found in view: " + data.length);
+            resetSourceRecordLTP(viewId, data);
 
-        //now figure out what templates are at play for which records
-       getTemplates(viewId, data, structure);
+            //now figure out what templates are at play for which records
+            getTemplates(viewId, data, structure);
+        });
     })
     .catch(function(err) {
        handleError(err);
@@ -344,24 +372,46 @@ function getRecordIdsList(recordList){
 function mergeRecordIntoTemplate(records, template, templateId){
     log.log("In mergeRecordIntoTemplate");
 
+    // set image module settings
+    var opts = {}
+    opts.centered = false; //Set to true to always center images
+    opts.fileType = "docx"; //Or pptx
+    
+    //Pass your image loader
+    opts.getImage = function(value) {
+        return base64DataURLToArrayBuffer(value);
+    }
+    
+    //Pass the function that return image size
+    opts.getSize = function(img, tagValue, tagName) {
+        //img is the image returned by opts.getImage()
+        //tagValue is 'examples/image.png'
+        //tagName is 'image'
+        //tip: you can use node module 'image-size' here
+        return [150, 150];
+    }
+
     //Load the docx file as a binary
     var content = template.file;
     var fileName = template.name;
     var zip = new JSZip(content);
     var doc = new Docxtemplater();
+    //attach image module
+    doc.attachModule(new ImageModule(opts));
     doc.loadZip(zip);
     //This bit of code here will make sure that variables in the template
     //that don't have corresponding values in the record data are
     //replaced with empty strings
     doc.setOptions({'nullGetter': function(part) {
-            return "";
+        return "";
     }})
 
-
-    log.log("Data to merge:");
-    log.log(records);
     //create the data structure to merge into the template
-    var mergeData = {"page":records};
+    var mergeData = {
+        "page": records
+    };
+
+    console.log("mergeData:", mergeData);
 
     //set the templateVariables
     doc.setData(mergeData);
@@ -371,6 +421,7 @@ function mergeRecordIntoTemplate(records, template, templateId){
         doc.render()
     }
     catch (err) {
+        console.log(err)
         handleError(err);
     }
 
@@ -450,3 +501,19 @@ function handleError(err){
         globalCallback(null, err);
     }
 }
+
+function base64DataURLToArrayBuffer(dataURL) {
+    const base64Regex = /^data:image\/(png|jpg|svg|svg\+xml);base64,/;
+    if (!base64Regex.test(dataURL)) {
+      return false;
+    }
+    const stringBase64 = dataURL.replace(base64Regex, "");
+    let binaryString;
+    binaryString = Buffer.from(stringBase64, "base64").toString("binary");
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      const ascii = binaryString.charCodeAt(i);
+      bytes[i] = ascii;
+    }
+    return bytes.buffer;
+  }

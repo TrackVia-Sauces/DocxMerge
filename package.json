@@ -10,7 +10,10 @@
   "license": "Apache",
   "dependencies": {
     "dateformat": "2.0.0",
+    "docxtemplater": "file:docxtemplater",
+    "docxtemplater-image-module": "^3.1.0",
     "jszip": "2.6.1",
+    "pizzip": "^3.0.6",
     "promise": "^7.1.1",
     "trackvia-api": "^1.7.1",
     "xmldom": "0.1.27"
