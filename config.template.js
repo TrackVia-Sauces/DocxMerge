@@ -40,6 +40,12 @@ config.template_table.view_id = 1;
 //The name of the field in the template view that holds the docx file
 config.template_table.field_name_for_template_document = "Template";
 
+//The size of an image embedded in document, defaults to size of image
+config.template_table.image_size = {
+  width: 0,
+  height: 0
+};
+
 /************************* Merged Doc Table *********************************/
 //The view ID we'll use to place the merged doc files
 config.merged_doc_table.view_id = 2;

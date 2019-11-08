@@ -10,8 +10,9 @@
   "license": "Apache",
   "dependencies": {
     "dateformat": "2.0.0",
-    "docxtemplater": "file:docxtemplater",
+    "docxtemplater": "^3.14.8",
     "docxtemplater-image-module": "^3.1.0",
+    "image-size": "^0.8.3",
     "jszip": "2.6.1",
     "pizzip": "^3.0.6",
     "promise": "^7.1.1",

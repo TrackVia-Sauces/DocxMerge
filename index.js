@@ -384,11 +384,14 @@ function mergeRecordIntoTemplate(records, template, templateId){
     
     //Pass the function that return image size
     opts.getSize = function(img, tagValue, tagName) {
-        //img is the image returned by opts.getImage()
-        //tagValue is 'examples/image.png'
-        //tagName is 'image'
-        //tip: you can use node module 'image-size' here
-        return [150, 150];
+        if(config.template_table.image_size.width === 0 &&
+            config.template_table.image_size.height === 0) {
+                var sizeOf = require("image-size");
+                let sizeObj = sizeOf(Buffer.from(img, "binary"));
+                return [sizeObj.width, sizeObj.height];
+        } else {
+            return [config.template_table.image_size.width, config.template_table.image_size.height];
+        }
     }
 
     //Load the docx file as a binary
@@ -410,8 +413,6 @@ function mergeRecordIntoTemplate(records, template, templateId){
     var mergeData = {
         "page": records
     };
-
-    console.log("mergeData:", mergeData);
 
     //set the templateVariables
     doc.setData(mergeData);
