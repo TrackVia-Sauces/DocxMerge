@@ -108,7 +108,7 @@ function login(tableId){
 async function getRecordsThatNeedToBeMerged(tableId, viewId){
     log.log('Logged In.');
     api.getView(viewId, {"start": 0, "max": 1000})
-    .then((response) =>{
+    .then(async (response) =>{
 
         var data = response.data;
         var structure = response.structure;
@@ -123,7 +123,14 @@ async function getRecordsThatNeedToBeMerged(tableId, viewId){
         let imagesToRetrieve = [];
         for(let record of data) {
             for(let field of imageFields) {
-                imagesToRetrieve.push(api.getFile(viewId, record['Record ID'], field))
+                // load the images in a series because API returns 404 if field is empty
+                //imagesToRetrieve.push(api.getFile(viewId, record['Record ID'], field))
+                try {
+                    let image = await api.getFile(viewId, record['Record ID'], field);
+                    imagesToRetrieve.push(image);
+                } catch(err) {
+                    imagesToRetrieve.push('');
+                }
             }
         }
         Promise.all(imagesToRetrieve).then(imageData => {
@@ -131,10 +138,15 @@ async function getRecordsThatNeedToBeMerged(tableId, viewId){
             for(let record of data) {
                 let imagesForRecord = imageData.splice(0, imageFields.length);
                 for(let index in imageFields) {
-                    imageType = imagesForRecord[index].response.headers['content-disposition'].match(/"(.*)"/).pop().split('.')[1];
-                    imageContents = imagesForRecord[index]['body'];
-                    imageB64 = `data:image/${imageType};base64,${Buffer.from(imageContents, 'binary').toString('base64')}`;
-                    record[imageFields[index]] = imageB64;
+                    // fetch must have a response to contain an image
+                    if(imagesForRecord[index].response) {
+                        imageType = imagesForRecord[index].response.headers['content-disposition'].match(/"(.*)"/).pop().split('.')[1];
+                        imageContents = imagesForRecord[index]['body'];
+                        imageB64 = `data:image/${imageType};base64,${Buffer.from(imageContents, 'binary').toString('base64')}`;
+                        record[imageFields[index]] = imageB64;
+                    } else {
+                        record[imageFields[index]] = '';
+                    }
                 }
             }
             log.log("Records found in view: " + data.length);
@@ -142,6 +154,8 @@ async function getRecordsThatNeedToBeMerged(tableId, viewId){
 
             //now figure out what templates are at play for which records
             getTemplates(viewId, data, structure);
+        }).catch(function(err) {
+            console.log(err)
         });
     })
     .catch(function(err) {
