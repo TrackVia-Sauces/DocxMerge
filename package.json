@@ -1,22 +1,21 @@
 {
-  "name": "DocXMerge",
+  "name": "user-audit",
   "version": "1.0.0",
-  "description": "merge documents into .docx files",
+  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "TrackVia",
-  "license": "Apache",
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "dateformat": "2.0.0",
-    "docxtemplater": "^3.14.8",
-    "docxtemplater-image-module": "^3.1.0",
+    "docxtemplater": "^3.16.11",
     "image-size": "^0.8.3",
-    "jszip": "2.6.1",
+    "moment": "^2.24.0",
+    "open-docxtemplater-image-module": "^1.0.3",
     "pizzip": "^3.0.6",
-    "promise": "^7.1.1",
-    "trackvia-api": "^1.7.1",
-    "xmldom": "0.1.27"
+    "request": "^2.88.0",
+    "request-promise": "^4.2.5",
+    "trackvia-api": "^1.8.3"
   }
 }

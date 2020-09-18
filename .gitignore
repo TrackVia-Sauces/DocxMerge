@@ -1,7 +1,3 @@
-Archive.zip
-*.docx
 node_modules
-config.js
-Archive.zip
+constants.js
 .DS_Store
-*.zip

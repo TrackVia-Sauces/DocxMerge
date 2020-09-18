@@ -1,105 +1,33 @@
 # DocxMerge
-Merges records from the same table into one .docx file using a .docx template.
+Merges records from the same table into a .docx file using a .docx template.
 
-This sauce assumes you have the following setup
-* A table with a document field that holds the templates for your doc merges. We'll call this the template table. This is where the sauce will find the templates. If you want to change a template you just need to re-upload a new template file. If you want to use multiple templates, simply create multiple records in this table.
-* A table with a document field that holds the merged .docx file. We'll call this the merged doc table. After a successful merge a new record will be created in this table and the merged file will be uploaded to it in a document field. This table should also contain a relationship to the template table, so you know where the merged doc came from, and a short answer field for some simple notes about the merge.
-* Any table that you want to merge records from should have a relationship to the template table, so you can select which template you want to use.
-* For each table that has records that need to be merged, create a filetered view that only shows records who have a parent template set. This will be the view the sauce will look in to find the records it needs to merge.
+This sauce requires that you have the following TrackVia ERD
+* A table with a document field that will hold the templates for your .docx merges. We will refer to this as the `Template` table. If you want to change a template, you need to upload a new template file. If you want to use multiple templates, create multiple records in this table.
 
-Here is an exmaple ERD for an app that has been setup to perform doc merge on a table called *Reciepts* and a table called *Invoices*. The .docx templates are stored in the table called *Templates* and the resultant merged documents are stored in *Merge Docs*. 
+* A table with a document field that will hold the merged .docx file. We will refer to this as the `Destination` table. After a successful merge a new record will be created in this table and the merged file will be uploaded to it.
 
-![alt text](https://raw.githubusercontent.com/TrackVia-Sauces/DocxMerge/master/docs/erd_example.png "Example ERD")
+* A table that holds the records which you would like to merge into .docx files. We will refer to this as the `Records` table.
+
+* A view that is filtered to contain the records that have a template relationship set.  The sauce pulls records from this view.  The filter should check that the relationship to the `Template` table is not blank.
+
+Here is an example of the required ERD for an app that has been setup to perform .docx merge on a table called *Records*. The .docx templates are stored in the table called *Templates* and the resulting documents are stored in *Destination*.
+
+![alt text](https://raw.githubusercontent.com/TrackVia-Sauces/DocxMerge/master/images/exampleERD.png "Example ERD")
 
 
 ## Installation
-Download or clone this repository and run `npm install` to install all the node modules needed to run this sauce
+Download or clone this repository and run `npm install` to install all the packages needed to run this sauce.
 
 ## Configuration
-First copy the [config.template.js file](https://github.com/TrackVia-Sauces/DocxMerge/blob/master/config.template.js) as `config.js` and then change the following in `config.js` to match the details of your account:
-```
-/************************* Account Config *********************************/
-//The API key that gives you access to the API
-//This is found at https://go.trackvia.com/#/my-info
-config.account.api_key = '8675309';
+First copy `constants.template.js` as `constants.js` and then change `constants.js` to match the details of your account.
 
-//The name of the user to login as
-//Use username and password if you're
-//not using an access token to authorize this
-//microservice. 
-config.account.username = 'user@user.com';
+Once you've configured your `constants.js` file, zip the files, and use the zip file as your source for configuring the TrackVia microservice.
 
-//The password of the user to login as
-config.account.password = 'correcthorsebatterystaple';
-
-//If you're not using username/password you can use an access token
-//to authorize this microservice. If a access_token is present
-//the username/password will be ignored. 
-config.account.access_token = '';
-
-//The address of the server you'll be using
-config.account.environment = 'https://go.trackvia.com';
-
-/************************* Template Table *********************************/
-//The view ID we'll use to find the template files
-config.template_table.view_id = 1;
-
-//The name of the field in the template view that holds the docx file
-config.template_table.field_name_for_template_document = "Template";
-
-/************************* Merged Doc Table *********************************/
-//The view ID we'll use to place the merged doc files
-config.merged_doc_table.view_id = 2;
-
-//The name of the field in the merged doc view that holds the docx file
-config.merged_doc_table.merged_document_field_name = "Doc";
-
-//The name of the field where we'll put the details of the doc merge
-// (Optional)
-config.merged_doc_table.merged_doc_details_field_name = "Details";
-
-//The name of the field in the merged doc table that links to the template
-// (Optional)
-config.merged_doc_table.merged_doc_to_template_relationship_field_name = "Template";
-
-//A user field in the merged doc table that is the last user to change the source records.
-//This way you know who made the change
-// (Optional)
-config.merged_doc_table.merge_user_field_name = "Merge By User";
-
-
-/************************* Source Record Tables *********************************/
-//The name of the field on ANY RECORD THAT NEEDS TO BE MERGED
-//that tells us which template to use
-//this needs to be the same across all tables that will
-//have their records merged
-config.source_tables.template_relationship_field_name = "Merge Template";
-//This config does not need to be edited. It'll modify the field name above to point
-//to the numeric ID of the relationship
-config.source_tables.template_relationship_field_name_id = config.source_tables.template_relationship_field_name + "(id)";
-
-//This one is a big complex but necesary
-//For reaons I won't go into here we need to know
-//what view to look into for records that need to be merged
-//when an event fires on a given table. So we need a map
-//that connects table IDs to view IDs
-config.source_tables.table_ids_to_view_ids = {
-                                "3" : 4
-                            };
-
-/*************************************************************************************************************
- *
- * End config. You're all done configuring
- *
- ************************************************************************************************************/
-```
-
-Once you've configured your config.js file, zip up everything, and use that zip file as your source file for configuring the TrackVia microservice.
+Attach the .docx merge microservice to the `Records` table on the `After Update` event.
 
 ## .docx Templates
-The [template file included](https://github.com/TrackVia-Sauces/DocxMerge/blob/master/template_example.docx) shows how to use curly braces `{}` to add variables to your .docx file that will be replaced by values from your TrackVia records.
+The [template file included](https://github.com/TrackVia-Sauces/DocxMerge/blob/master/template/template.docx) shows how to use curly braces `{}` to add variables to your .docx file that will be replaced by values from your TrackVia records.
 
-* Keep in mind that the document must have a page start tag `{#page}` and a page close tag `{/page}` on another page for paging to work.
-* If the names in your records have spaces replace them with underscores. For example a field called "first name" would be written as `{first_name}` in the template.
-* Field names are case sensative. If your field in TrackVia is "First name" then you must call it '{First_name}' in the template file.
-* Field names cannot have special characters like symbols. For exmaple you can't use `{#_of_days}`. The sauce will remove `#, ", ', !, @, $, %, ^, (, ), *, =, +, &` from field names that come back in the data, so if you have a field called "cash$" you can refer to it as `{cash}` and it will work. All that being said, do try to avoid special characters they always make things hard.
+* If the field names in your records have spaces replace them with underscores. For example a field called `First Name` would be written as `{First_Name}` in the template.
+* Field names are case sensitive. If your field in TrackVia is `First name` then you must call it `{First_name}` in the template file.
+* Field names cannot have special characters. For example you cannot use `{#_of_days}`. The sauce will remove `#, ", ', !, @, $, %, ^, (, ), *, =, +, &` from field names. For instance, if you have a field called "cash$" you can refer to it as `{cash}` in the template.
